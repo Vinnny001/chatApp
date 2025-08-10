@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat Mobile View</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      width: 100%;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+      background: white;
+    }
+
+    .chat-header {
+      background: #25D366;
+      color: white;
+      padding: 15px;
+      font-weight: bold;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      height: 60px;
+      flex-shrink: 0;
+    }
+
+    .default-chat {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100px;
+      padding: 10px;
+      color: #888;
+      font-size: 18px;
+    }
+
+    .user-list {
+      flex: 1;
+      overflow-y: auto;
+      background: #f7f7f7;
+      border-top: 1px solid #ccc;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+
+    .user-item img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .user-item:hover {
+      background-color: #e0e0e0;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="chat-header">ChatApp</div>
+
+    <div class="default-chat">
+      <p>Select a user to start chatting...</p>
+    </div>
+
+    <div class="user-list">
+      <div class="user-item">
+        <img src="https://via.placeholder.com/35" alt="User 1">
+        <div>User 1</div>
+      </div>
+      <div class="user-item">
+        <img src="https://via.placeholder.com/35" alt="User 2">
+        <div>User 2</div>
+      </div>
+      <div class="user-item">
+        <img src="https://via.placeholder.com/35" alt="User 3">
+        <div>User 3</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

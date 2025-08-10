@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat UI</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .main-container {
+      width: 100%;
+      max-width: 900px;
+      height: 600px;
+      background: white;
+      display: flex;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .user-list {
+      min-width: 100px;
+      max-width: 300px;
+      background: #f7f7f7;
+      border-right: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding-bottom: 50px;
+      position: relative;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .user-item:hover {
+      background-color: #eaeaea;
+    }
+
+    .user-item.active {
+      background-color: #d0f0d0;
+      font-weight: bold;
+    }
+
+    .user-item img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .resize-bar {
+      width: 6px;
+      background-color: #ccc;
+      cursor: ew-resize;
+      user-select: none;
+      height: 100%;
+    }
+
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      background: #25D366;
+      color: white;
+      padding: 15px;
+      font-weight: bold;
+      text-align: center;
+      position: relative;
+    }
+
+    .back-button {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #25D366;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .user-profile {
+      background: #ededed;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .user-profile img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    .user-profile .name {
+      font-weight: bold;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      max-width: 75%;
+      padding: 10px;
+      border-radius: 15px;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+
+    .me {
+      align-self: flex-end;
+      background: #dcf8c6;
+      text-align: right;
+    }
+
+    .other {
+      align-self: flex-start;
+      background: #e5e5ea;
+      text-align: left;
+    }
+
+    #typingIndicator {
+      padding: 0 10px;
+      color: gray;
+      font-style: italic;
+      height: 20px;
+      margin-bottom: 5px;
+      display: none;
+    }
+
+    .chat-input {
+      display: none;
+      border-top: 1px solid #ccc;
+      display: flex;
+      padding: 5px;
+    }
+
+    .chat-input textarea {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+      resize: none;
+      border-radius: 20px;
+      background-color: #fff;
+      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-input button {
+      background: #25D366;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-left: 10px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .default-chat {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      font-size: 18px;
+      color: #888;
+    }
+
+    .default-chat p {
+      margin: 0;
+      font-weight: bold;
+    }
+
+    .new-chat-button {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: #25D366;
+      color: white;
+      font-size: 28px;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="user-list" id="userList">
+      <button class="new-chat-button" onclick="startNewChat()">+</button>
+    </div>
+
+    <div class="resize-bar" id="resizeBar"></div>
+
+    <div class="chat-container">
+      <div class="chat-header">
+        ChatApp
+        <button class="back-button" id="backButton" onclick="goBack()">Back</button>
+      </div>
+
+      <div class="user-profile" id="userProfile" style="display: none;">
+        <img src="https://via.placeholder.com/40" alt="User profile">
+        <div>
+          <div class="name" id="chatUserName">Receiver</div>
+          <div class="status">Online</div>
+        </div>
+      </div>
+
+      <div id="typingIndicator">User is typing...</div>
+
+      <div class="chat-messages" id="chat">
+        <div class="default-chat"><p>Select a user to start chatting...</p></div>
+      </div>
+
+      <div class="chat-input" id="chatInput">
+        <textarea id="msgInput" placeholder="Type a message..." onkeydown="handleKey(event)"></textarea>
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+<script src="/socket.io.min.js" crossorigin="anonymous"></script>
+<script>
+  let isChatLoaded = false;
+
+  const displayedMessages = new Set();
+  const socket = io();
+
+  const resizeBar = document.getElementById('resizeBar');
+  const userList = document.getElementById('userList');
+  const chatMessages = document.getElementById('chat');
+  const userProfile = document.getElementById('userProfile');
+  const chatUserName = document.getElementById('chatUserName');
+  const msgInput = document.getElementById('msgInput');
+  const chatInput = document.getElementById('chatInput');
+  const backButton = document.getElementById('backButton');
+  const typingIndicator = document.getElementById('typingIndicator');
+
+  const loggedInUser = localStorage.getItem('loggedInUser');
+  if (!loggedInUser) {
+    alert('Please login first');
+    window.location.href = '/';
+  }
+
+  socket.on('connect', () => {
+    console.log('🔌 Connected:', socket.id);
+    socket.emit('register', loggedInUser);
+  });
+
+  let selectedUser = null;
+
+  resizeBar.addEventListener('mousedown', () => {
+    document.body.style.cursor = 'ew-resize';
+    document.onmousemove = (e) => {
+      const newWidth = e.clientX - document.querySelector('.main-container').getBoundingClientRect().left;
+      userList.style.width = Math.max(100, Math.min(300, newWidth)) + 'px';
+    };
+    document.onmouseup = () => {
+      document.body.style.cursor = 'default';
+      document.onmousemove = null;
+      document.onmouseup = null;
+    };
+  });
+
+  function addUserToList(identifier) {
+    if (document.querySelector(`[data-user="${identifier}"]`)) return;
+    const div = document.createElement('div');
+    div.className = 'user-item';
+    div.dataset.user = identifier;
+    div.onclick = () => selectUser(identifier);
+    div.innerHTML = `<img src="https://via.placeholder.com/35" alt=""><div>${identifier}</div>`;
+    userList.insertBefore(div, userList.querySelector('.new-chat-button'));
+  }
+
+  async function startNewChat() {
+  const input = prompt('Enter user phone/email:');
+  if (!input) return;
+  const res = await fetch(`/api/users/check/${encodeURIComponent(input)}`);
+  const data = await res.json();
+  if (!data.exists) return alert('User not found');
+
+  const phone = data.identifier;  // ✅ Always use phone number
+  addUserToList(phone);
+  selectUser(phone);
+}
+
+
+  async function selectUser(user) {
+    isChatLoaded = false;
+
+    localStorage.setItem('selectedUser', user);
+    selectedUser = user;
+    chatUserName.textContent = user;
+    chatInput.style.display = 'flex';
+    userProfile.style.display = 'flex';
+    backButton.style.display = 'block';
+
+    document.querySelectorAll('.user-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.user === user);
+    });
+
+    chatMessages.innerHTML = '';
+    displayedMessages.clear();
+    hideTypingIndicator();
+
+    try {
+      const res = await fetch(`/api/messages/${encodeURIComponent(loggedInUser)}/${encodeURIComponent(user)}`);
+      const messages = await res.json();
+      
+
+      messages.forEach(msg => {
+  const uniqueKey = msg._id; // Use unique ID from MongoDB
+  if (!displayedMessages.has(uniqueKey)) {
+    const div = document.createElement('div');
+    div.className = 'message ' + (msg.sender === loggedInUser ? 'me' : 'other');
+    div.textContent = msg.text;
+    chatMessages.appendChild(div);
+    displayedMessages.add(uniqueKey);
+  }
+  
+});
+
+
+
+      scrollToLatestMessage();
+      isChatLoaded = true;
+    } catch (err) {
+      console.error('Load error:', err);
+    }
+
+    msgInput.focus();
+  }
+
+  function scrollToLatestMessage() {
+    chatMessages.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text || !selectedUser) return;
+
+  // Optimistic UI render (before saving)
+  const div = document.createElement('div');
+  div.className = 'message me';
+  div.textContent = text;
+  chatMessages.appendChild(div);
+  scrollToLatestMessage();
+  msgInput.value = '';
+
+  try {
+    const res = await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sender: loggedInUser, receiver: selectedUser, text })
+    });
+    const saved = await res.json(); // saved._id should be present
+    displayedMessages.add(saved._id); // ✅ Only track by _id
+  } catch (err) {
+    console.error('Send error:', err);
+  }
+
+  socket.emit('send_message', { sender: loggedInUser, receiver: selectedUser, text });
+}
+
+
+  function handleKey(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
+    } else {
+      notifyTyping();
+    }
+  }
+
+  function goBack() {
+    chatMessages.innerHTML = `<div class="default-chat"><p>Select a user to start chatting...</p></div>`;
+    userProfile.style.display = 'none';
+    chatInput.style.display = 'none';
+    backButton.style.display = 'none';
+    selectedUser = null;
+    displayedMessages.clear();
+    document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
+  }
+
+  function showTypingIndicator() {
+    typingIndicator.style.display = 'block';
+  }
+
+  function hideTypingIndicator() {
+    typingIndicator.style.display = 'none';
+  }
+
+  let typingTimeout;
+  function notifyTyping() {
+    showTypingIndicator();
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      hideTypingIndicator();
+    }, 2000);
+  }
+
+  socket.on('receive_message', (data) => {
+  const sender = data.sender;
+  const uniqueKey = data._id;
+
+  // ✅ Skip if message already displayed
+  if (displayedMessages.has(uniqueKey)) return;
+
+  // ✅ Skip if it's our own message (already rendered optimistically)
+  if (sender === loggedInUser) return;
+
+  // ✅ Add user to list if not there
+  if (!document.querySelector(`[data-user="${sender}"]`)) {
+    addUserToList(sender);
+  }
+
+  // ✅ If it's the selected user, show it
+  if (sender === selectedUser) {
+    const div = document.createElement('div');
+    div.className = 'message other';
+    div.textContent = data.text;
+    chatMessages.appendChild(div);
+    scrollToLatestMessage();
+  }
+
+  displayedMessages.add(uniqueKey); // ✅ Add after rendering or skipping
+});
+
+
+
+  async function loadIncomingChats() {
+    const res = await fetch(`/api/messages/incoming/${encodeURIComponent(loggedInUser)}`);
+    const chats = await res.json();
+    const uniqueSenders = new Set();
+    chats.forEach(msg => {
+      if (msg.sender !== loggedInUser && !uniqueSenders.has(msg.sender)) {
+        uniqueSenders.add(msg.sender);
+        addUserToList(msg.sender);
+      }
+    });
+  }
+
+  async function loadPreviousChat() {
+    const savedUser = localStorage.getItem('selectedUser');
+    if (savedUser) {
+      addUserToList(savedUser);
+      await selectUser(savedUser);
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    loadPreviousChat();
+    loadIncomingChats();
+  });
+</script>
+</body>
+</html>
