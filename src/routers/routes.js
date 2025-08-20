@@ -8,6 +8,9 @@ import dotenv from 'dotenv';
 import { body, validationResult } from 'express-validator';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+import redisClient from './helpers/redisClient.js'; // adjust path
+
 // Optional: enable CORS if frontend is on different domain/port
 // import cors from 'cors';
 
@@ -157,6 +160,9 @@ import Message from '../models/message.js';
 // ✅ Send a message
 routes.post('/api/messages', async (req, res) => {
   const { sender, receiver, text } = req.body;
+    console.log("SEND API:", { sender, receiver, text });
+
+
 
   if (!sender || !receiver || !text) {
     return res.status(400).json({ message: 'Missing fields' });
@@ -171,6 +177,10 @@ routes.post('/api/messages', async (req, res) => {
     console.error('Send message error:', err);
     res.status(500).json({ message: 'Server error' });
   }
+
+
+
+
 });
 
 // ✅ Get messages between two users
@@ -227,6 +237,19 @@ routes.get('/messages/incoming/:user', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch conversations' });
   }
 });
+
+routes.get('/api/users/:phone/online', async (req, res) => {
+  const { phone } = req.params;
+
+  try {
+    const socketId = await redisClient.get(`online:${phone}`);
+    res.json({ online: !!socketId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 
 

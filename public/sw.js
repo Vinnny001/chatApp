@@ -1,4 +1,5 @@
 const cacheName = 'chat-cache-v1';
+
 const assets = [
   '/',
   '/chat.html',

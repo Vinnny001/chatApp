@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat UI</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+
+.main-container {
+  width: 100%;
+  max-width: 900px;
+  height: 600px;
+  background: white;
+  display: flex;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.user-list {
+  min-width: 100px;
+  max-width: 300px;
+  background: #f7f7f7;
+  border-right: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.user-item:hover {
+  background-color: #eaeaea;
+}
+
+.user-item img {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.resize-bar {
+  width: 6px;
+  background-color: #ccc;
+  cursor: ew-resize;
+  user-select: none;
+  height: 100%;
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  background: #25D366;
+  color: white;
+  padding: 15px;
+  font-weight: bold;
+  text-align: center;
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #25D366;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: none; /* Hidden by default */
+}
+
+.user-profile {
+  background: #ededed;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.user-profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.user-profile .name {
+  font-weight: bold;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message {
+  max-width: 75%;
+  padding: 10px;
+  border-radius: 15px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+.me {
+  align-self: flex-end;
+  background: #dcf8c6;
+}
+
+.other {
+  align-self: flex-start;
+  background: #e5e5ea;
+}
+
+
+
+.chat-input {
+  display: flex;
+  border-top: 1px solid #ccc;
+  
+}
+
+
+
+.chat-input button {
+  background: #25D366;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-right: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+  border-radius: 20px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+
+.default-chat {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 18px;
+  color: #888;
+  text-align: center;
+}
+
+.default-chat p {
+  margin: 0;
+  font-weight: bold;
+}
+
+.chat-input {
+  display: none;
+}
+
+
+.chat-input textarea {
+  flex: 1;
+  padding-left: 10px;
+  padding-top: 15px;
+  
+  margin-left: 10px;
+  margin-top: 5px;
+  
+  margin-bottom: 5px;
+  border: none;
+  outline: none;
+  resize: none;
+  max-height: 150px;
+  border-radius: 20px;
+  background-color: #fff;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="user-list" id="userList">
+      <div class="user-item" onclick="selectUser('Jane Doe')">
+        <img src="https://via.placeholder.com/35" alt="">
+        <div>Jane Doe</div>
+      </div>
+      <div class="user-item" onclick="selectUser('John Smith')">
+        <img src="https://via.placeholder.com/35" alt="">
+        <div>John Smith</div>
+      </div>
+      <div class="user-item" onclick="selectUser('Emily Johnson')">
+        <img src="https://via.placeholder.com/35" alt="">
+        <div>Emily Johnson</div>
+      </div>
+    </div>
+    <div class="resize-bar" id="resizeBar"></div>
+    <div class="chat-container">
+      <div class="chat-header">
+        ChatApp
+        <button class="back-button" id="backButton" onclick="goBack()">Back</button>
+      </div>
+      <div class="user-profile" id="userProfile" style="display: none;">
+        <img src="https://via.placeholder.com/40" alt="User profile">
+        <div>
+          <div class="name" id="chatUserName">Jane Doe</div>
+          <div class="status">Online</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat">
+        <div class="default-chat">
+          <p>Select a user to start chatting...</p>
+        </div>
+      </div>
+      <div class="chat-input" id="chatInput">
+        <textarea type="text" id="msgInput" placeholder="Type a message..." onkeydown="handleKey(event)"></textarea>
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    const resizeBar = document.getElementById('resizeBar');
+    const userList = document.getElementById('userList');
+    const chatMessages = document.getElementById('chat');
+    const userProfile = document.getElementById('userProfile');
+    const chatUserName = document.getElementById('chatUserName');
+    const msgInput = document.getElementById('msgInput');
+    const chatInput = document.getElementById('chatInput');
+    const backButton = document.getElementById('backButton');
+
+    const messageStore = {};
+
+    let isDragging = false;
+    const minWidth = 100;
+    const maxWidth = 300;
+
+    resizeBar.addEventListener('mousedown', function () {
+      isDragging = true;
+      document.body.style.cursor = 'ew-resize';
+    });
+
+    document.addEventListener('mousemove', function (e) {
+      if (!isDragging) return;
+      const newWidth = e.clientX - document.querySelector('.main-container').getBoundingClientRect().left;
+      const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+      userList.style.width = clampedWidth + 'px';
+    });
+
+    document.addEventListener('mouseup', function () {
+      isDragging = false;
+      document.body.style.cursor = 'default';
+    });
+
+    function sendMessage() {
+      const message = msgInput.value.trim();
+      const user = chatUserName.textContent;
+      if (message) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message me';
+        msgDiv.textContent = message;
+        chatMessages.appendChild(msgDiv);
+        //msgInput.value = '';
+        //msgDiv.scrollIntoView({ behavior: 'smooth' });
+
+        storeMessage(user, message, 'me');
+        msgInput.value = '';
+        msgInput.style.height = 'auto';
+        msgDiv.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function storeMessage(user, message, sender) {
+    if (!messageStore[user]) messageStore[user] = [];
+    messageStore[user].push({ text: message, sender });
+  }
+
+    
+
+    function selectUser(user) {
+    chatUserName.textContent = user;
+    chatInput.style.display = 'flex';
+    userProfile.style.display = 'flex';
+    backButton.style.display = 'block';
+
+    chatMessages.innerHTML = '';
+    if (messageStore[user]) {
+      messageStore[user].forEach(msg => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${msg.sender}`;
+        msgDiv.textContent = msg.text;
+        chatMessages.appendChild(msgDiv);
+      });
+    }
+
+    msgInput.focus();
+  }
+
+    function goBack() {
+      chatMessages.innerHTML = `<div class="default-chat">
+                                  <p>Select a user to start chatting...</p>
+                                </div>`;
+      userProfile.style.display = 'none';  // Hide user profile
+      chatInput.style.display = 'none';    // Hide chat input
+      backButton.style.display = 'none';  // Hide back button
+    }
+
+    // Click anywhere in chat container to focus input
+    document.querySelector('.chat-container').addEventListener('click', function () {
+      if (msgInput.style.display !== 'none') {
+        msgInput.focus();  // Focus the input field when chat is clicked
+      }
+    });
+  </script>
+
+</body>
+</html>

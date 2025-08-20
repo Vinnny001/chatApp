@@ -2,7 +2,7 @@ import express from 'express';
 import { Server } from 'socket.io';
 import http from 'http';
 //import bcrypt from 'bcrypt';
-//import db from '../src/config/db.js';
+import db from '../src/config/db.js';
 import Message from '../src/models/message.js';
 
 import routes from '../src/routers/routes.js';
@@ -10,9 +10,11 @@ import dotenv from 'dotenv';
 //import { body, validationResult } from 'express-validator';
 // Optional: enable CORS if frontend is on different domain/port
 import cors from 'cors';
+import redisClient from "../src/routers/helpers/redisClient.js";
+
+
 
 // db.js
-
 
 
 
@@ -52,16 +54,27 @@ const users = new Map();
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
-  socket.on('register', (userPhone) => {
+  socket.on('register', async (userPhone) => {
+    // Save in local Map
     users.set(userPhone, socket);
     console.log('User registered:', userPhone);
-  
+
+    // Save in Redis (mark online, 15s expiry)
+    await redisClient.set(`online:${userPhone}`, 'online', { EX: 15 });
+
+    // Listen for heartbeat events from client
+    socket.on('heartbeat', async () => {
+      await redisClient.set(`online:${userPhone}`, 'online', { EX: 15 });
+      // Optional: console.log(`${userPhone} heartbeat received`);
+    });
   });
 
-  socket.on('send_message', async (data) => {
+  socket.on('send_message', async(data) => {
   const { sender, receiver, text } = data;
+   console.log("SEND API:", { sender, receiver, text });
+   console.log("Users Map keys:", Array.from(users.keys()));
 
-  try {
+    try {
     const savedMessage = await Message.create({
       sender,
       receiver,
@@ -80,17 +93,85 @@ io.on('connection', (socket) => {
   } catch (err) {
     console.error('Socket message save error:', err);
   }
+
+  db.query(
+    "INSERT INTO messages (sender, receiver, text, status) VALUES (?, ?, ?, 'sent')",
+    [sender, receiver, text],
+    (err, result) => {
+      if (err) return console.error("DB insert error:", err);
+
+      const messageId = result.insertId;
+
+      const receiverSocket = users.get(receiver);
+
+      
+
+      if (receiverSocket) {
+        db.query("UPDATE messages SET status='delivered' WHERE id=?", [messageId]);
+
+        const msgData = {
+          id: messageId,
+          sender,
+          receiver,
+          text,
+          status: 'delivered',
+          timestamp: new Date()
+        };
+
+        receiverSocket.emit('receive_message', msgData);
+
+        // 🔹 Also send updated unread count
+        db.query(
+          "SELECT COUNT(*) AS unread FROM messages WHERE receiver=? AND sender=? AND status!='read'",
+          [receiver, sender],
+          (err, result) => {
+            if (!err) {
+              receiverSocket.emit('unread_count_update', {
+                sender,
+                unread: result[0].unread
+              });
+            }
+          }
+        );
+
+        // Tell sender message is delivered
+        socket.emit('message_status_update', msgData);
+      }
+    }
+  );
 });
 
 
-  socket.on('disconnect', () => {
-  for (let [phone, s] of users.entries()) {
-    if (s === socket) users.delete(phone);
-  }
-  console.log('User disconnected:', socket.id);
+socket.on('read_message', ({ messageId, sender }) => {
+  db.query("UPDATE messages SET status='read' WHERE id=?", [messageId], (err) => {
+    if (err) {
+      console.error("DB update error:", err);
+      return;
+    }
+
+    const senderSocket = users.get(sender);
+    if (senderSocket) {
+      senderSocket.emit('message_status_update', { id: messageId, status: 'read' });
+    }
+  });
 });
 
+
+
+
+  socket.on('disconnect', async () => {
+    for (let [phone, s] of users.entries()) {
+      if (s === socket) {
+        users.delete(phone);
+        await redisClient.del(`online:${phone}`);
+        console.log(`${phone} went offline`);
+      }
+    }
+    console.log('User disconnected:', socket.id);
+  });
 });
+
+
 
 
 // app.use(cors()); // Uncomment if using frontend separately (e.g., React app on another port)

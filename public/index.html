@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <title>Login / Signup</title>
+
+  <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4caf50">
+
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -161,7 +166,8 @@
         responseEl.className = res.ok ? 'success' : '';
 
         if (res.ok) {
-          localStorage.setItem('loggedInUser', data.user.phone_number);
+          localStorage.setItem('userPhone', data.user.phone_number);
+          
  // Save user email to local storage
           window.location.href = '/chat.html';
         } else {
@@ -172,5 +178,15 @@
       }
     }
   </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(() => console.log('✅ Service Worker registered'))
+    .catch(err => console.error('SW registration failed', err));
+}
+</script>
+
+
 </body>
 </html>

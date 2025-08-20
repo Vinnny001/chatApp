@@ -1,0 +1,71 @@
+<div class="container">
+    <div class="textarea-wrapper">
+      <textarea id="msgInput" placeholder="Type a message..." rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+    <div id="messageStatus"></div>
+  </div>
+  
+  <style>
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+  
+    .textarea-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  
+    #msgInput {
+      width: 300px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      resize: none;
+      overflow: hidden;
+    }
+  
+    #messageStatus {
+      margin-top: 10px;
+      color: #555;
+    }
+  </style>
+  
+  <script>
+    function handleKey(event) {
+      const textarea = event.target;
+  
+      if (event.key === "Enter" && event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+  
+    function autoResize(textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
+    }
+  
+    function sendMessage() {
+      const textarea = document.getElementById("msgInput");
+      const message = textarea.value.trim();
+      const status = document.getElementById("messageStatus");
+  
+      if (message) {
+        status.textContent = "Sending...";
+  
+        setTimeout(() => {
+          console.log("Message sent:", message);
+          status.textContent = "Message sent.";
+          textarea.value = "";
+          textarea.style.height = "auto";
+        }, 500);
+      }
+    }
+  </script>
+  
